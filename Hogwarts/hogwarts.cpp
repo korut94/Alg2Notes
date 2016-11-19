@@ -83,7 +83,7 @@ int raggiungi(int N, int M, int A[], int B[], int inizio[], int fine[])
 	// tempo d'attesa. Il piu' 1 finale serve per contare comunque il consumo
 	// d'unita' per spostarsi da una scala all'altra.
 	//
-	// Rapitolando:
+	// Ricapitolando:
 	// distanza = tempAttesaMin + tempRaggiuntaNodo + tempScala
 	// ovviamente nel caso si possa ancora percorrerla.
 	distanza[scala.second] = (t >= fine[scala.first]) ? INF :
