@@ -23,14 +23,14 @@
 
 #include <algorithm>
 #include <climits>
-#include <functional>
-#include <iostream>
 #include <queue>
 #include <vector>
 
-typedef MinQueue std::priority_queue<int,
-				     std::vector<int>,
-				     std::greater<int> >;
+typedef std::priority_queue<
+  int,
+  std::vector<int>,
+  std::greater<int>
+> MinQueue;
 
 #define INF INT_MAX
 
@@ -41,10 +41,10 @@ int raggiungi(int N, int M, int A[], int B[], int inizio[], int fine[])
   int t = 0; // istante di tempo dalla partenza alla destinazione
   int distanza[N];
   bool raggiunto[N];
-  std::vector<int> adjacencyMatrix[N];
+  std::vector<std::pair<int,int>> adjacencyMatrix[N];
 
   // Build the rappresentaiton of the graph
-  for (int i=0, i < M, i++) {
+  for (int i=0; i < M; i++) {
     // Dato il passaggio successivo, alcuni nodi non sono segnati nella matrice
     // A, percio' bisogna salvare la lora destinazione insieme all'indice della
     // scala.
@@ -62,7 +62,7 @@ int raggiungi(int N, int M, int A[], int B[], int inizio[], int fine[])
   
   MinQueue q;
 
-  // Inizializzazione del punto di partenza
+  // Inizializzazione pdel punto di partenza
   distanza[0] = 0;
 
   while (attuale != destinazione) {
@@ -71,7 +71,7 @@ int raggiungi(int N, int M, int A[], int B[], int inizio[], int fine[])
     // se sono arrivato al nodo attuale ci ho messo la distanza fissata.
     t = distanza[attuale];
     
-    for (auto scala : adjacencyGraph[attuale]) {
+    for (auto scala : adjacencyMatrix[attuale]) {
       // Sole se non ho gia' un percorso minimo per il mio vicino
       if (!raggiunto[scala.second]) {
 	// Aggiorna la distanza.
@@ -93,7 +93,7 @@ int raggiungi(int N, int M, int A[], int B[], int inizio[], int fine[])
       }
     }
 
-    attuale = q.pop();
+    attuale = q.top();
   }
 
   // Quantita' di tempo per arrivare alla destinazione
