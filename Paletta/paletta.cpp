@@ -1,5 +1,5 @@
 /**
- * Soluzione Hogwarts senza implementazione della coda di priorita'
+ * Soluzione Paletta utilizzando la ricerca del minimo
  * Copyright (c) 2016 Andrea Mantovani
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
