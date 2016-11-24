@@ -76,17 +76,19 @@ struct Nodo {
 	Nodo * sx, // puntatore al sottoalbero sinistro
 		   dx, // puntatore al sottoalbero destro
 };
+```
 
 **Nota**: tutte le implementazioni usano un pseudo codice con la sintassi del
 *C++* ma possono mancare alcuni elementi per poterli eseguire (dichiarazione
 di funzioni o variabili). In generale definisco `p` il nodo correntemente
-puntato, `T` la radice dell'albero e `C` l'array del problema. Definisco
-`int(p,i,j)` se l'intervallo `[i,j]` e' contenuto in `p`.
+puntato, `T` la radice dell'albero e `C` l'array del problema.
+
+## Implementazione metodo *query*
 
 L'algortimo della query risulta una immediata ricerca binaria, dove se `i` non
-e' compreso tra il mio intervallo si continua la ricerca in base se `i < p->ls`
-o `p->ld > i`, dove `p` e' il nodo corrente. Dato che `0 <= i <= N-1` per
-ipotesi al problema non occorre guardare se `i` rimante all'interno dell'array.
+e' compreso nell'intervallo del nodo corrente `p` si continua la ricerca in base
+se `i < p->ls` o `p->ld > i`. Dato che `0 <= i <= N-1` per ipotesi dell problema
+non occorre guardare se `i` rimante all'interno dell'array.
 
 ```C++
 int query(int i)
@@ -157,9 +159,6 @@ Nodo * update(int i, int j, int c, Nodo *p)
 		p->dx = update(i, j, c p->dx);
 		return p;
 	} else {
-		// Incremento il nodo attuale
-		p->k += c;
-		
 		// Caso (3) i < ls < j
 		// L'intervallo va sopra il limite inferiore del nodo corrente
 		if (p->ls > i && p->ls < j) {
@@ -179,15 +178,18 @@ Nodo * update(int i, int j, int c, Nodo *p)
 		}
 		
 		// Caso (5) aggiornare il nodo corrente
-	    if (i >= p->ls && p->ld <= j) {
+	        if (i >= p->ls && p->ld <= j) {
 			// Aggiornamenti per i due intervalli creati
-			p->sx = (p->ls == i) ? p->sx : update(p->ls, i - 1, 0, p->sx);
-			p->dx = (p->ld == j) ? p->dx : update(j + 1, p->ds, 0, p->dx);
+			p->sx = (p->ls == i) ? p->sx : update(p->ls, i - 1, p->k, p->sx);
+			p->dx = (p->ld == j) ? p->dx : update(j + 1, p->ds, p->k, p->dx);
 			
 			// Ristringo l'intervallo del nodo attuale
 			p->ls = i;
 			p->ld = j;
 		}
+		
+		// Incremento il nodo attuale
+		p->k += c;
 		
 		return p;
 	}
@@ -195,7 +197,12 @@ Nodo * update(int i, int j, int c, Nodo *p)
 
 ```
 
-La procedura di *update*
+La procedura di *update* aggiorna l'albero in modo corretto ma **non** l'ho fa in `O(lg(N))` questo
+perche' abbiamo la necessita' in caso l'intervallo `[i,j]` comprenda l'intervallo `[ls,ld]` di `p`
+e' necessario scendere ricorsivamente nei due sottoalberi di p, portando inevitabilemente la
+complessita' a `O(N)`.
+
+
 
 
 
