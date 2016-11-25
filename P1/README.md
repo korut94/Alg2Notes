@@ -55,7 +55,7 @@ a destra gli intervalli a destra dell'estremo destro.
 
 ```  
               < [i,j] > 
-       < [l,k] >  |  < [m,n] >
+    < [l,k] >     |     < [m,n] >
 < ... > | < ... > | < ... > | < ... >
 ```
 
@@ -90,7 +90,7 @@ non occorre guardare se `i` rimante all'interno dell'array.
 int query(int i)
 {
 	// Siamo dentro all'intervallo
-	if (p->ls >= i && i <= p->ls) {
+	if (p->ls >= i && i <= p->ld) {
 		return p->k;
 	} else if (i < p->ls) { // Intervallo esterno sinitro
 		return query(i, p->sx);
@@ -101,22 +101,23 @@ int query(int i)
 ```
 
 **Osservazione - 5**:
-Quando `p` o un suo figlio non sono inizializzati allora si sa che
+> Quando `p` o un suo figlio non sono inizializzati allora si sa che
 `C[h] == 0` dove `h` e' la profondita' del nodo puntato da `p`.
 
 Per **5** allora si ha:
 ```C++
-int query_V1(int i)
+// Metodo query V1
+int query(int i, Nodo *p)
 {
 	// Struttura dati vuota
 	if (p == 0) {
 		return 0;
-	} else if (p->ls >= i && i <= p->ls) { // Siamo dentro all'intervallo
+	} else if (p->ls >= i && i <= p->ld) { // Siamo dentro all'intervallo
 		return p->k;
 	} else if (i < p->ls) { // Intervallo esterno sinitro
-		return (p->ls) ? query(i, p->sx) : 0;
+		return (p->sx) ? query(i, p->sx) : 0;
 	} else { // Intervallo esterno destro
-		return (p->ld) ? query(i, p->dx) : 0;
+		return (p->dx) ? query(i, p->dx) : 0;
 	}
 }
 ```
@@ -191,23 +192,70 @@ Nodo * update(int i, int j, int c, Nodo *p)
 }
 ```
 
-La procedura di *update* aggiorna l'albero in modo corretto ma **non** l'ho fa in `O(lg(N))`. Questo
-perche' abbiamo la necessita' nel caso l'intervallo `[i,j]` comprendesse l'intervallo `[ls,ld]` di `p`
-di scendere ricorsivamente nei sotto alberi sinistro e destro di `p`, portando inevitabilemente la
+La procedura di *update* aggiorna l'albero in modo corretto ma **non** l'ho
+fa in `O(lg(N))`. Questo perche' abbiamo la necessita' nel caso l'intervallo
+`[i,j]` comprendesse l'intervallo `[ls,ld]` di `p` di scendere ricorsivamente
+nei sotto alberi sinistro e destro di `p`, portando inevitabilemente la
 complessita' a `O(N)`.
 
 **Osservazione - 6**:
+> Il valore effettivo in una data posizione dell'array e' richiesto solo nel
+caso in una *query* dove si vuole l'esatto valore della posizione i-esima dell'
+array.
 
+Applicando una procedura *Lazy* ad *update* si potra' portare il carico dell'
+aggiornamento dell'array su *query* dove effettivaente diventa necessario
+aggioranare la cella di cui si vuole conoscere il valore.
 
+La questione ora e' capire dove salvare la quantita' che sarebbe dovuta essere
+aggiunta da *update* ma pigramente lo lascia come onere a *query*. Come prima
+idea potrebbe si potrebbe salvare nei nodi due interi `residuo` che indicano 
+di quando c'e' da aggiungere ai sotto alberi adiacenti. Il risultato sarebbe
+dunque:
 
+```C++
+struct Nodo
+{
+  ...
+  int residuo_s, residuo_d; // Aggiunta dei residui da applicare ai sottoalberi
+  ...
+};
+```
 
+Modifichiamo *query* in modo che trasporti il residuo durante il suo percorso.
 
+```C++
+// Metodo query V2
+int query(int i, Nodo *p)
+{
+  // Struttura dati vuota
+  if (p == 0) {
+    return 0;
+  } else if (p->ls >= i && i <= p->ld) { // Siamo dentro all'intervallo
+    // La procedura lazy evita di aggiornare i nodi dei sotto alberi ma
+    // garanitisce di aggiornare il nodo corrente.
+    return p->k;
+  } else {
+    Nodo *succ = (i < p->ls) ? p->sx : p->dx;
+    int& residuo = (i < p->ls) ? &p->residuo_s : &p->residuo_d;
 
-
-
-
-
-
-
+    if (succ == 0) {
+      // Il valore sara' sicuramente il residuo da aggiungere
+      return residuo;
+    } else {
+      // Aggiungo al valore dell'intervallo il residuo
+      succ->k += p->residuo_s;
+      // L'incremento dei residuo del nodo adiacente permette di garanire
+      // che a tutto il sottoalbero sara' applicato il residuo ma mano
+      // che la procedura di query avanza.
+      succ->residuo_s += residuo;
+      succ->residuo_d += residuo;
+      // Passato il residuo salvato
+      residuo = 0;
+      return query(i, succ);
+    }
+  }
+}
+```
 
 
