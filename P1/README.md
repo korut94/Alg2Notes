@@ -244,7 +244,7 @@ int query(int i, Nodo *p)
       return residuo;
     } else {
       // Aggiungo al valore dell'intervallo il residuo
-      succ->k += p->residuo_s;
+      succ->k += residuo;
       // L'incremento dei residuo del nodo adiacente permette di garanire
       // che a tutto il sottoalbero sara' applicato il residuo ma mano
       // che la procedura di query avanza.
