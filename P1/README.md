@@ -63,14 +63,15 @@ Con le varie osservazioni effettuare possiamo gia' definire una struttura base
 il cui occupa `O(N)` e esegue l'operazione di ricerca in `O(lg(N))`.
 
 ```C++
-struct Nodo {
+struct Nodo
+{
 	int    k;  // Valore dell'intervallo rappresentato
 
 	int    ls, // Limite sinistro dell'intervallo
 		   ld; // Limite destro dell'intervallo
 
 	Nodo * sx, // puntatore al sottoalbero sinistro
-		   dx, // puntatore al sottoalbero destro
+		   dx; // puntatore al sottoalbero destro
 };
 ```
 
@@ -89,8 +90,9 @@ non occorre guardare se `i` rimante all'interno dell'array.
 ```C++
 int query(int i)
 {
-	// Siamo dentro all'intervallo
-	if (p->ls >= i && i <= p->ld) {
+	if (p == 0) {
+		return 0;
+	} else if (p->ls >= i && i <= p->ld) { // Siamo dentro all'intervallo
 		return p->k;
 	} else if (i < p->ls) { // Intervallo esterno sinitro
 		return query(i, p->sx);
@@ -257,5 +259,5 @@ int query(int i, Nodo *p)
   }
 }
 ```
-
-
+Il metodo *query* mantiene ancora complessita' `O(lg(N))` rimanendo una ricerca
+binaria svolta in un albero binario bilanciato. 
