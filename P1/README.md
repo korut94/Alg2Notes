@@ -24,14 +24,14 @@ Ritorna la posizione di `C[i]`, con `0 <= i <= N-1`.
 
 # Risoluzione
 **Osservazione - 1**: 
-Data la richiesta di compiere le operazioni in `O(lg(N))` conviene utilizzare
+> Data la richiesta di compiere le operazioni in `O(lg(N))` conviene utilizzare
 una struttura ad albero binario bilanciato. 
 
 **Osservazione - 2**:
-L'albero `T` per soddisfare il vincolo in spazio deve avere al piu' `N` nodi.
+> L'albero `T` per soddisfare il vincolo in spazio deve avere al piu' `N` nodi.
 
 **Osservazione - 3**:
-Dato l'array `C` di dimensione `N` il numero d'intervalli e' massimo quando
+> Dato l'array `C` di dimensione `N` il numero d'intervalli e' massimo quando
 questi hanno dimensione unitaria, ovvero ogni cella dell'array ha numeri
 diversi.
 
@@ -41,7 +41,7 @@ partizionamento dell'albero binario, il qui puo' essere scelta o usando i
 valori o gli intervalli.
 
 **Osservazione - 4**:
-L'uso dei valori come paramentro di partizionamento non garantisce il
+> L'uso dei valori come paramentro di partizionamento non garantisce il
 bilanciamento dell'albero.
 
 L'inserimento consecutivo di valori crescenti o decresenti causerebbe la
@@ -49,18 +49,14 @@ formazione di una coda, piombando il tempo per eseguire le operazioni a
 `O(N)`.
 
 Percio' per **4** i nodi rappresentano i valore dell'intervallo e si va ad
-utilizzare gli intervalli per partizionare l'albero. A seconda del livello
-di profondita' del nodo si puo' determinare la zona dell'array eseguendo
-il partizionamento `0 <= N/2^h N` dove `h` e' il livello di profondita' del
-nodo corrente.
+utilizzare gli intervalli per partizionare l'albero in modo che a sinistra
+vadano gli intervalli a sinistra dell'estremo sinistro del nodo corrente e
+a destra gli intervalli a destra dell'estremo destro.
 
 ```  
-        N
-   N/2  |  N/2
-p 1 | 2 | 3 | 4
- ---|---|---|---
-i 0 | 1 | 2 | 3
-C 2 | 8 | 8 | 0
+              < [i,j] > 
+       < [l,k] >  |  < [m,n] >
+< ... > | < ... > | < ... > | < ... >
 ```
 
 Con le varie osservazioni effettuare possiamo gia' definire una struttura base
@@ -142,7 +138,6 @@ Nodo * costruisci()
 Si noti che e' manteniamo la proprieta' che il nostro albero sia bilanciato
 oltre ai vincoli di spazio e tempo richiesti.
 
-
 ```C++
 Nodo * update(int i, int j, int c, Nodo *p)
 {
@@ -152,55 +147,58 @@ Nodo * update(int i, int j, int c, Nodo *p)
 		// a c.
 		return new Nodo(c, i, j);
 	// Caso (2) intervallo fuori completamente da p
-	} else if (j < p->ls) {
-		p->sx = update(i, j, c, p->sx);
-		return p;
-	} else if (i > p->ld) {
-		p->dx = update(i, j, c p->dx);
-		return p;
 	} else {
-		// Caso (3) i < ls < j
-		// L'intervallo va sopra il limite inferiore del nodo corrente
-		if (p->ls > i && p->ls < j) {
-			// Aggiorna solo l'intervallo a sinistra di p
-			p->sx = updadate(i, p->ls - 1, c);
-			// Sposta l'intervallo da aggiornare a [ls,j]
-			i = p->ls;
-		}
+		if (j < p->ls) {
+			p->sx = update(i, j, c, p->sx);
+		}  else if (i > p->ld) {
+		  p->dx = update(i, j, c p->dx);
+	  } else {
+		  // Caso (3) i < ls < j
+		  // L'intervallo va sopra il limite inferiore del nodo corrente
+		  if (p->ls > i && p->ls < j) {
+			  // Aggiorna solo l'intervallo a sinistra di p
+			  p->sx = updadate(i, p->ls - 1, c);
+			  // Sposta l'intervallo da aggiornare a [ls,j]
+			  i = p->ls;
+		  }
+	
+		  // Caso (4) i < ld < j
+		  // L'intervallo va sopra il limite superiore del nodo corrente
+		  if (p->ld > i && p->ld < j) {
+			  // Aggiorna solo l'intervallo a destra di p
+			  p->dx = update(p->ld + 1, j, c);
+			  // Sposta l'intervallo da aggioranre a [i,ld]
+			  j = p->ld;
+		  }
 		
-		// Caso (4) i < ld < j
-		// L'intervallo va sopra il limite superiore del nodo corrente
-		if (p->ld > i && p->ld < j) {
-			// Aggiorna solo l'intervallo a destra di p
-			p->dx = update(p->ld + 1, j, c);
-			// Sposta l'intervallo da aggioranre a [i,ld]
-			j = p->ld;
-		}
-		
-		// Caso (5) aggiornare il nodo corrente
-	        if (i >= p->ls && p->ld <= j) {
-			// Aggiornamenti per i due intervalli creati
-			p->sx = (p->ls == i) ? p->sx : update(p->ls, i - 1, p->k, p->sx);
-			p->dx = (p->ld == j) ? p->dx : update(j + 1, p->ds, p->k, p->dx);
+		  // Caso (5) aggiornare il nodo corrente
+	    if (i >= p->ls && p->ld <= j) {
+			  // Aggiornamenti per i due intervalli creati
+			  p->sx = (p->ls == i) ? p->sx : update(p->ls, i - 1, p->k, p->sx);
+			  p->dx = (p->ld == j) ? p->dx : update(j + 1, p->ds, p->k, p->dx);
 			
-			// Ristringo l'intervallo del nodo attuale
-			p->ls = i;
-			p->ld = j;
+			  // Ristringo l'intervallo del nodo attuale
+			  p->ls = i;
+			  p->ld = j;
+		  }
+		
+		  // Incremento il nodo attuale
+		  p->k += c;
 		}
-		
-		// Incremento il nodo attuale
-		p->k += c;
-		
+    
 		return p;
 	}
 }
-
 ```
 
-La procedura di *update* aggiorna l'albero in modo corretto ma **non** l'ho fa in `O(lg(N))` questo
-perche' abbiamo la necessita' in caso l'intervallo `[i,j]` comprenda l'intervallo `[ls,ld]` di `p`
-e' necessario scendere ricorsivamente nei due sottoalberi di p, portando inevitabilemente la
+La procedura di *update* aggiorna l'albero in modo corretto ma **non** l'ho fa in `O(lg(N))`. Questo
+perche' abbiamo la necessita' nel caso l'intervallo `[i,j]` comprendesse l'intervallo `[ls,ld]` di `p`
+di scendere ricorsivamente nei sotto alberi sinistro e destro di `p`, portando inevitabilemente la
 complessita' a `O(N)`.
+
+**Osservazione - 6**:
+
+
 
 
 
