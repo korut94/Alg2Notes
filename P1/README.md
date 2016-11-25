@@ -237,7 +237,7 @@ int query(int i, Nodo *p)
     return p->k;
   } else {
     Nodo *succ = (i < p->ls) ? p->sx : p->dx;
-    int& residuo = (i < p->ls) ? &p->residuo_s : &p->residuo_d;
+    int& residuo = (i < p->ls) ? p->residuo_s : p->residuo_d;
 
     if (succ == 0) {
       // Il valore sara' sicuramente il residuo da aggiungere
