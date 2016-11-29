@@ -142,55 +142,96 @@ Si noti che e' manteniamo la proprieta' che il nostro albero sia bilanciato
 oltre ai vincoli di spazio e tempo richiesti.
 
 ```C++
-Nodo * update(int i, int j, int c, Nodo *p)
+int distanza(Intervallo i, int centro) {
+  return (i / 2) - centro;
+}
+
+// sez e' la sezione del sottoarray che sto considerando
+Nodo * update(Intervallo i, Nodo *p, Sezione sez)
 {
-	// Caso (1) Intervallo di soli zeri
-	if (p == 0) {
-		// Costruiamo un nodo foglia con il valore dell'intevallo [i,j] uguale
-		// a c.
-		return new Nodo(c, i, j);
-	// Caso (2) intervallo fuori completamente da p
-	} else {
-		if (j < p->ls) {
-			p->sx = update(i, j, c, p->sx);
-		}  else if (i > p->ld) {
-		  p->dx = update(i, j, c p->dx);
-	  } else {
-		  // Caso (3) i < ls < j
-		  // L'intervallo va sopra il limite inferiore del nodo corrente
-		  if (p->ls > i && p->ls < j) {
-			  // Aggiorna solo l'intervallo a sinistra di p
-			  p->sx = updadate(i, p->ls - 1, c);
-			  // Sposta l'intervallo da aggiornare a [ls,j]
-			  i = p->ls;
-		  }
-	
-		  // Caso (4) i < ld < j
-		  // L'intervallo va sopra il limite superiore del nodo corrente
-		  if (p->ld > i && p->ld < j) {
-			  // Aggiorna solo l'intervallo a destra di p
-			  p->dx = update(p->ld + 1, j, c);
-			  // Sposta l'intervallo da aggioranre a [i,ld]
-			  j = p->ld;
-		  }
-		
-		  // Caso (5) aggiornare il nodo corrente
-	    if (i >= p->ls && p->ld <= j) {
-			  // Aggiornamenti per i due intervalli creati
-			  p->sx = (p->ls == i) ? p->sx : update(p->ls, i - 1, p->k, p->sx);
-			  p->dx = (p->ld == j) ? p->dx : update(j + 1, p->ds, p->k, p->dx);
-			
-			  // Ristringo l'intervallo del nodo attuale
-			  p->ls = i;
-			  p->ld = j;
-		  }
-		
-		  // Incremento il nodo attuale
-		  p->k += c;
-		}
+  // Caso (0) Nessun intervallo
+  if (p == 0) {
+    return new Nodo(i.c, i.s, i.d);
+    // Caso (1) Aggiornamento sull'intero intervallo
+  } else if (p->ls == i.s && p->ld == i.d) {
+    p->k += i.c;
+    return p;
+    // Caso (2) Dentro all'intervallo presente
+  } else if (p->ls >= i.s && i.d <= p->ld) {
+    Insieme<Intervallo> intervalli = {};
+
+    // Inserisco l'intervallo considerato solo se la sua lunghezza e' > 0.
+    // I due intervalli esterni non sono sicuro che esistano perche' se
+    // l'aggiornamtno tocca gli estremi di p ma non entrambi si andranno a
+    // creare due solo sottointervalli.
+    intervalli.pushIfNotZero(Intervallo(p->ls, i.s-1, p->k));
+    // La sezione centrale sara' sempre valida
+    intervalli.push(Intervallo(i.s, i.d, p->k + i.c));
+    intervalli.pushIfNotZero(Intervallo(i.d + 1, p->ld, p->k));
+
+    Intervallo centro = min_distanza(intervalli, sez.centro());
+    intervalli = intervalli - centro;
+    // Inserisci nel nodo p tutte le informazioni relative alla sezione
+    aggiorna(p, centro);
+
+    // Esegui l'update per ogni intervallo dell'insieme. Questa chiamata
+    // funziona piu' da dispatcher dato che non si sa come distribuire i
+    // nodi rappresentanti i vari intervalli.
+    for (Intervallo intervallo : intervalli) {
+      update(intervallo, p, sez);
+    }
+
+    // Ritorno il nodo aggiornato
+    return p;
+
+    // Caso (3) Fuori dall'intervallo presente
+    // Da notare che non si sa a priori in che modo l'aggiornamento vada fuori
+    // dall'intervallo attuale.
+  } else {
+    Insieme<Intervallo> intervalli = {};
+
+    // Ritorna l'intervallo [i.s,ls[. Se l'intervallo i e' piu' piccolo la
+    // funzione tornera' l'intero intervallo i, se ((p->ls - 1) - i.s) < 0
+    // tornera' l'intervallo nullo.
+    intervalli.pushIfNotZero(i.subIntervallo(i.s, p->ls - 1));
+    // Ritorna l'intervallo [ls,ld]
+    Intervallo intC = i.subIntervallo(p->ls, p->ld);
+    // Ritorna l'intervallo ]ld, i.d]
+    intervalli.pushIfNotZero(i.subIntervallo(p->ld + 1, i.d));
+
+    // Gestione intervalli fuoriuscenti da p
+    for (Intervallo intervallo : intervalli) {
+      Intervallo succ = intervallo;
+
+      int distanzaInt = distanza(intervallo, sez.centro());
+      int distanzaP = dinstanza(p, sez.centro());
+      int distanzaSucc = distanzaInt;
+      
+      // L'intervallo e' piu' vicino al centro di quello attuale
+      if (|distanzaInt| < |distanzaP|) {
+	// Prendi tutte le informazioni da p in modo da costruire l'intervallo
+	// che rappresenta.
+	succ = p->intervallo();
+	// Sostituisco l'intervallo di p con il nuovo intervallo
+	aggiorna(p, intervallo);
+	distanzaSucc = distanzaP;
+      }
+
+      if (distanzaSucc >= 0) {
+	p->dx = update(succ, p->dx, sez.parteDestra());
+      } else {
+	p->sx = update(succ, p->sx, sez.parteSinistra());
+      }
+    }
+
+    // Gestione del caso centrale
+    if (!intC.isZero()) {
+      // La chiamata ricorsiva ha termine perche' o e' gestita da (1) o da (2)
+      update(intC, p, sez);
+    }
     
-		return p;
-	}
+    return p;
+  }
 }
 ```
 
